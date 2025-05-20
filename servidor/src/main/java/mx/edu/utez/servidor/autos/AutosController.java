@@ -26,9 +26,10 @@ public class AutosController {
     public ResponseEntity<?> create(@RequestBody AutosDto autosDto) {
         return autosService.create(autosDto);
     }
+
     @DeleteMapping("/")
-    public ResponseEntity<?> delete(Long id) {
-        return autosService.delete(id);
+    public ResponseEntity<?> delete(@RequestBody AutosDto autosDto) {
+        return autosService.delete(autosDto.getId());
     }
     @PutMapping("/")
     public ResponseEntity<?> update(@RequestBody AutosDto autosDto) {
