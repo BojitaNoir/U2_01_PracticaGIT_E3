@@ -14,36 +14,34 @@
             --rojo: #FF6B6B;
             --sidebar: #2c3e50;
         }
-        
         .sidebar {
             background-color: var(--sidebar);
             min-height: 100vh;
             padding: 20px;
             color: white;
         }
-        
         .card-automotriz {
             border: none;
             border-radius: 15px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             transition: transform 0.3s ease;
+            cursor: pointer;
         }
-        
+
         .card-automotriz:hover {
             transform: translateY(-5px);
         }
-        
         .btn-agregar {
             background-color: var(--verde-limon);
             border: none;
             padding: 10px 25px;
         }
-        
+
         .btn-editar {
             background-color: var(--amarillo);
             border: none;
         }
-        
+
         .btn-eliminar {
             background-color: var(--rojo);
             border: none;
@@ -51,6 +49,7 @@
         }
     </style>
 </head>
+
 <body class="bg-light">
     <div class="container-fluid">
         <div class="row">
@@ -76,41 +75,18 @@
                 </ul>
             </div>
 
-            <!-- Contenido principal -->
             <div class="col-md-9 col-lg-10 p-4">
                 <div class="d-flex justify-content-between align-items-center mb-5">
                     <h1 class="fw-bold">Gestión de Automóviles</h1>
                     <button class="btn btn-agregar" onclick="abrirModalAgregar()">
-                        <i class="bi bi-plus-lg"></i> 
+                        <i class="bi bi-plus-lg"></i>
+
                     </button>
                 </div>
 
                 <div class="mb-5">
                     <h2 class="section-title">Vehículos Registrados</h2>
-                    <div class="row row-cols-1 row-cols-lg-2 row-cols-xl-3 g-4">
-                        <div class="col">
-                            <div class="card h-100">
-                                <img src="https://www.toyota.mx/adobe/dynamicmedia/deliver/dm-aid--e6014b9a-b371-4202-b29f-888f4f2cafcb/corollasecvt-c-03-carousel-features-exterior.jpg" 
-                                     class="card-img-top" alt="Toyota Corolla" style="height: 200px; object-fit: cover;">
-                                <div class="card-body">
-                                    <h5 class="card-title">Toyota Corolla 2023</h5>
-                                    <p class="mb-1"><strong>Marca:</strong> Toyota</p>
-                                    <p class="mb-1"><strong>Modelo:</strong> Corolla</p>
-                                    <p class="mb-1"><strong>Placas:</strong> ABC-123</p>
-                                    <p class="mb-1"><strong>Proveedor:</strong> AutoSolutions</p>
-                                </div>
-                                <div class="card-footer bg-white border-top-0">
-                                    <div class="d-flex gap-2 justify-content-end">
-                                        <button class="btn btn-editar btn-sm" onclick="abrirModalEditar()">
-                                            <i class="bi bi-pencil"></i>
-                                        </button>
-                                        <button class="btn btn-eliminar btn-sm" onclick="confirmarEliminar()">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    <div id="contenedor-cards" class="row row-cols-1 row-cols-lg-2 row-cols-xl-3 g-4">
                     </div>
                 </div>
             </div>
@@ -121,31 +97,54 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        function confirmarEliminar(id) {
-            Swal.fire({
-                title: '¿Eliminar vehículo?',
-                text: "Esta acción no se puede deshacer",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Sí, eliminar',
-                cancelButtonText: 'Cancelar'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // Lógica para eliminar
-                    Swal.fire(
-                        '¡Eliminado!',
-                        'El vehículo ha sido eliminado.',
-                        'success'
-                    )
+      
+        const IMAGEN_FIJA = "https://www.toyota.mx/adobe/dynamicmedia/deliver/dm-aid--e6014b9a-b371-4202-b29f-888f4f2cafcb/corollasecvt-c-03-carousel-features-exterior.jpg";
+
+        async function cargarAutos() {
+            const contenedor = document.getElementById('contenedor-cards');
+            contenedor.innerHTML = "";
+            try {
+                // Fuerza recarga para evitar caché
+                const autos = await fetchData('http://localhost:8080/api/autos/?t=' + Date.now(), 'GET');
+                const lista = Array.isArray(autos) ? autos : autos.data;
+                if (Array.isArray(lista)) {
+                    lista.forEach(auto => {
+                        // Escapa comillas para pasar el objeto como string seguro
+                        const autoStr = encodeURIComponent(JSON.stringify(auto));
+                        contenedor.innerHTML += `
+                <div class="col">
+                    <div class="card h-100 card-automotriz" onclick="mostrarDetalleAuto(decodeURIComponent('${autoStr}'))">
+                        <img src="${IMAGEN_FIJA}" class="card-img-top" alt="Auto" style="height: 200px; object-fit: cover;">
+                        <div class="card-body">
+                            <h5 class="card-title">${auto.marca} ${auto.modelo}</h5>
+                            <p class="mb-1"><strong>Marca:</strong> ${auto.marca}</p>
+                            <p class="mb-1"><strong>Modelo:</strong> ${auto.modelo}</p>
+                            <p class="mb-1"><strong>Placas:</strong> ${auto.placas}</p>
+                            <p class="mb-1"><strong>Proveedor:</strong> ${auto.provedor}</p>
+                        </div>
+                        <div class="card-footer bg-white border-top-0">
+                            <div class="d-flex gap-2 justify-content-end">
+                                <button class="btn btn-editar btn-sm" onclick="event.stopPropagation(); abrirModalEditar('${auto.id}', {marca:'${auto.marca}', modelo:'${auto.modelo}', placas:'${auto.placas}', provedor:'${auto.provedor}'})">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-eliminar btn-sm" onclick="event.stopPropagation(); confirmarEliminar('${auto.id}')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                `;
+                    });
+                } else {
+                    console.warn("La respuesta de la API no es un arreglo.");
                 }
-            })
+            } catch (e) {
+                console.error(e);
+            }
         }
 
-        function abrirModalEditar(id) {
-            // Lógica para editar
-        }
+        window.onload = cargarAutos;
 
         function abrirModalAgregar() {
             Swal.fire({
@@ -154,8 +153,7 @@
                     <input type="text" id="marca" class="swal2-input" placeholder="Marca">
                     <input type="text" id="modelo" class="swal2-input" placeholder="Modelo">
                     <input type="text" id="placas" class="swal2-input" placeholder="Placas">
-                    <input type="text" id="proveedor" class="swal2-input" placeholder="Proveedor">
-                    <input type="url" id="imagen" class="swal2-input" placeholder="URL de la imagen">
+                    <input type="text" id="provedor" class="swal2-input" placeholder="Proveedor">
                 `,
                 confirmButtonColor: '#C1FF72',
                 confirmButtonText: 'Guardar',
@@ -166,28 +164,27 @@
                         marca: document.getElementById('marca').value,
                         modelo: document.getElementById('modelo').value,
                         placas: document.getElementById('placas').value,
-                        proveedor: document.getElementById('proveedor').value,
-                        imagen: document.getElementById('imagen').value
+                        provedor: document.getElementById('provedor').value
                     }
                 }
-            }).then((result) => {
+            }).then(async (result) => {
                 if (result.isConfirmed) {
-                    // Aquí iría el fetch para guardar
+                    await fetchData('http://localhost:8080/api/autos/', 'POST', result.value);
                     Swal.fire('¡Guardado!', 'El vehículo ha sido agregado', 'success');
+                    cargarAutos();
                 }
             });
         }
 
-        function abrirModalEditar() {
+        function abrirModalEditar(id, datosActuales = { marca: '', modelo: '', placas: '', provedor: '' }) {
             Swal.fire({
                 title: 'Editar vehículo',
                 html: `
-                    <input type="text" id="marca" class="swal2-input" value="Toyota">
-                    <input type="text" id="modelo" class="swal2-input" value="Corolla">
-                    <input type="text" id="placas" class="swal2-input" value="ABC-123">
-                    <input type="text" id="proveedor" class="swal2-input" value="AutoSolutions">
-                    <input type="url" id="imagen" class="swal2-input" value="https://www.toyota.mx/...">
-                `,
+            <input type="text" id="marca" class="swal2-input" value="${datosActuales.marca}">
+            <input type="text" id="modelo" class="swal2-input" value="${datosActuales.modelo}">
+            <input type="text" id="placas" class="swal2-input" value="${datosActuales.placas}">
+            <input type="text" id="provedor" class="swal2-input" value="${datosActuales.provedor}">
+        `,
                 confirmButtonColor: '#FFD700',
                 confirmButtonText: 'Actualizar',
                 showCancelButton: true,
@@ -197,28 +194,68 @@
                         marca: document.getElementById('marca').value,
                         modelo: document.getElementById('modelo').value,
                         placas: document.getElementById('placas').value,
-                        proveedor: document.getElementById('proveedor').value,
-                        imagen: document.getElementById('imagen').value
+                        provedor: document.getElementById('provedor').value
                     }
                 }
-            }).then((result) => {
+            }).then(async (result) => {
                 if (result.isConfirmed) {
-                    // Aquí iría el fetch para actualizar
+                    await fetchData('http://localhost:8080/api/autos/', 'PUT', { id, ...result.value });
                     Swal.fire('¡Actualizado!', 'Cambios guardados', 'success');
+                    cargarAutos();
                 }
             });
         }
 
-        // Función de ejemplo para el fetch (debes adaptarla)
+        function confirmarEliminar(id) {
+            Swal.fire({
+                title: '¿Eliminar vehículo?',
+                text: "Esta acción no se puede deshacer",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    await fetchData('http://localhost:8080/api/autos/', 'DELETE', { id: Number(id) });
+                    Swal.fire('¡Eliminado!', 'El vehículo ha sido eliminado.', 'success');
+                    cargarAutos();
+                }
+            });
+        }
+
+        function mostrarDetalleAuto(autoStr) {
+            // Recibe el auto como string, lo convierte a objeto
+            const auto = JSON.parse(autoStr);
+            Swal.fire({
+                title: `${auto.marca} ${auto.modelo}`,
+                html: `
+                    <img src="${IMAGEN_FIJA}" alt="Auto" style="width: 100%; max-width: 500px; border-radius: 10px; margin-bottom: 20px;">
+                    <p style="font-size:1.2rem"><strong>Marca:</strong> ${auto.marca}</p>
+                    <p style="font-size:1.2rem"><strong>Modelo:</strong> ${auto.modelo}</p>
+                    <p style="font-size:1.2rem"><strong>Placas:</strong> ${auto.placas}</p>
+                    <p style="font-size:1.2rem"><strong>Proveedor:</strong> ${auto.provedor}</p>
+                `,
+                width: 600,
+                showConfirmButton: false,
+                showCloseButton: true
+            });
+        }
+
         async function fetchData(url, method, data) {
             try {
-                const response = await fetch(url, {
+                const options = {
                     method: method,
                     headers: {
                         'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(data)
-                });
+                    }
+                };
+                if (method !== 'GET' && data) {
+                    options.body = JSON.stringify(data);
+                }
+                const response = await fetch(url, options);
+                if (method === 'DELETE') return true;
                 return await response.json();
             } catch (error) {
                 Swal.fire('Error', error.message, 'error');
