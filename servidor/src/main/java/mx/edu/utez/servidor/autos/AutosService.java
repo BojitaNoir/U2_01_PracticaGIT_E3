@@ -20,9 +20,12 @@ public class AutosService {
     public ResponseEntity<ApiResponse> getAll() {
         return ResponseEntity.ok(new ApiResponse(autosRepository.findAll(), "OK"));
     }
-    public ResponseEntity<ApiResponse> create (Long id) {
+    public ResponseEntity<ApiResponse> create (AutosDto autosDto) {
         Autos autos = new Autos();
-        autos.setId(id);
+        autos.setMarca(autosDto.getMarca());
+        autos.setModelo(autosDto.getModelo());
+        autos.setPlacas(autosDto.getPlacas());
+        autos.setProvedor(autosDto.getProvedor());
         autosRepository.save(autos);
         return ResponseEntity.ok(new ApiResponse(autos, "OK"));
     }
@@ -30,15 +33,15 @@ public class AutosService {
         autosRepository.deleteById(id);
         return ResponseEntity.ok(new ApiResponse(null,"OK"));
     }
-    public ResponseEntity<ApiResponse> update(Long id, Autos autos) {
-        Autos existingAutos = autosRepository.findById(id).orElse(null);
+    public ResponseEntity<ApiResponse> update(AutosDto autosDto) {
+        Autos existingAutos = autosRepository.findById(autosDto.getId()).orElse(null);
         if (existingAutos == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse(null, "Autos not found"));
         }
-        existingAutos.setMarca(autos.getMarca());
-        existingAutos.setModelo(autos.getModelo());
-        existingAutos.setPlacas(autos.getPlacas());
-        existingAutos.setProveedor(autos.getProveedor());
+        existingAutos.setMarca(autosDto.getMarca());
+        existingAutos.setModelo(autosDto.getModelo());
+        existingAutos.setPlacas(autosDto.getPlacas());
+        existingAutos.setProvedor(autosDto.getProvedor());
         autosRepository.save(existingAutos);
         return ResponseEntity.ok(new ApiResponse(existingAutos, "OK"));
     }

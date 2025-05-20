@@ -1,11 +1,12 @@
 package mx.edu.utez.servidor.autos;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import static java.lang.System.out;
+
+@Slf4j
 @RestController
 @RequestMapping("/api/autos")
 @CrossOrigin(origins = {"*"})
@@ -21,20 +22,21 @@ public class AutosController {
         return autosService.getAll();
     }
 
-    @GetMapping("/create")
-    public ResponseEntity<?> create(Long id) {
-        return autosService.create(id);
+    @PostMapping("/")
+    public ResponseEntity<?> create(@RequestBody AutosDto autosDto) {
+        return autosService.create(autosDto);
     }
-    @GetMapping("/delete")
+    @DeleteMapping("/")
     public ResponseEntity<?> delete(Long id) {
         return autosService.delete(id);
     }
-    @GetMapping("/update")
-    public ResponseEntity<?> update(Long id, Autos autos) {
-        return autosService.update(id, autos);
+    @PutMapping("/")
+    public ResponseEntity<?> update(@RequestBody AutosDto autosDto) {
+        return autosService.update(autosDto);
     }
-    @GetMapping("/get")
-    public ResponseEntity<?> get(Long id) {
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getbyId(@PathVariable Long id) {
         return autosService.getbyId(id);
     }
 

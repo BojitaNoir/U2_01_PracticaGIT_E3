@@ -25,8 +25,8 @@ public class Autos {
     private String modelo;
 
     @Column(name = "placas")
-    private int placas;
+    private String placas;
 
     @Column(name = "provedor")
-    private String proveedor;
+    private String provedor;
 }
